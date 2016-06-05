@@ -315,9 +315,9 @@ class build_py (Command):
                 if self.compile:
                     outputs.append(importlib.util.cache_from_source(
                         filename, optimization=''))
-                if self.optimize > 0:
+                for opt in range(1, self.optimize + 1):
                     outputs.append(importlib.util.cache_from_source(
-                        filename, optimization=self.optimize))
+                        filename, optimization=opt))
 
         outputs += [
             os.path.join(build_dir, filename)
@@ -387,8 +387,8 @@ class build_py (Command):
         if self.compile:
             byte_compile(files, optimize=0,
                          force=self.force, prefix=prefix, dry_run=self.dry_run)
-        if self.optimize > 0:
-            byte_compile(files, optimize=self.optimize,
+        for opt in range(1, self.optimize + 1):
+            byte_compile(files, optimize=opt,
                          force=self.force, prefix=prefix, dry_run=self.dry_run)
 
 class build_py_2to3(build_py, Mixin2to3):
