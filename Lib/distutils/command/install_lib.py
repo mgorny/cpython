@@ -24,8 +24,8 @@ class install_lib(Command):
     #   2) compile .pyc only (--compile --no-optimize; default)
     #   3) compile .pyc and "opt-1" .pyc (--compile --optimize)
     #   4) compile "opt-1" .pyc only (--no-compile --optimize)
-    #   5) compile .pyc and "opt-2" .pyc (--compile --optimize-more)
-    #   6) compile "opt-2" .pyc only (--no-compile --optimize-more)
+    #   5) compile .pyc, "opt-1" and "opt-2" .pyc (--compile --optimize-more)
+    #   6) compile "opt-1" and "opt-2" .pyc (--no-compile --optimize-more)
     #
     # The UI for this is two options, 'compile' and 'optimize'.
     # 'compile' is strictly boolean, and only decides whether to
@@ -132,8 +132,8 @@ class install_lib(Command):
             byte_compile(files, optimize=0,
                          force=self.force, prefix=install_root,
                          dry_run=self.dry_run)
-        if self.optimize > 0:
-            byte_compile(files, optimize=self.optimize,
+        for opt in range(1, self.optimize + 1):
+            byte_compile(files, optimize=opt,
                          force=self.force, prefix=install_root,
                          verbose=self.verbose, dry_run=self.dry_run)
 
@@ -167,9 +167,9 @@ class install_lib(Command):
             if self.compile:
                 bytecode_files.append(importlib.util.cache_from_source(
                     py_file, optimization=''))
-            if self.optimize > 0:
+            for opt in range(1, self.optimize + 1):
                 bytecode_files.append(importlib.util.cache_from_source(
-                    py_file, optimization=self.optimize))
+                    py_file, optimization=opt))
 
         return bytecode_files
 
