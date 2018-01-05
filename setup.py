@@ -43,7 +43,17 @@ host_platform = get_platform()
 COMPILED_WITH_PYDEBUG = ('--with-pydebug' in sysconfig.get_config_var("CONFIG_ARGS"))
 
 # This global variable is used to hold the list of modules to be disabled.
-disabled_module_list = []
+pdm_env = "PYTHON_DISABLE_MODULES"
+if pdm_env in os.environ:
+    disabled_module_list = os.environ[pdm_env].split()
+else:
+    disabled_module_list = []
+
+pds_env = "PYTHON_DISABLE_SSL"
+if pds_env in os.environ:
+    disable_ssl = os.environ[pds_env]
+else:
+    disable_ssl = 0
 
 def add_dir_to_list(dirlist, dir):
     """Add the directory 'dir' to the list 'dirlist' (after any relative
@@ -537,6 +547,7 @@ class PyBuildExt(build_ext):
             os.unlink(tmpfile)
 
     def detect_modules(self):
+        global disable_ssl
         # Ensure that /usr/local is always used, but the local build
         # directories (i.e. '.' and 'Include') must be first.  See issue
         # 10520.
@@ -876,11 +887,11 @@ class PyBuildExt(build_ext):
                                depends = ['socketmodule.h']) )
         # Detect SSL support for the socket module (via _ssl)
         ssl_ext, hashlib_ext = self._detect_openssl(inc_dirs, lib_dirs)
-        if ssl_ext is not None:
+        if ssl_ext is not None and not disable_ssl:
             exts.append(ssl_ext)
         else:
             missing.append('_ssl')
-        if hashlib_ext is not None:
+        if hashlib_ext is not None and not disable_ssl:
             exts.append(hashlib_ext)
         else:
             missing.append('_hashlib')
