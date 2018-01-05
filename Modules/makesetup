@@ -90,7 +90,7 @@ CYGWIN*) if test $libdir = .
 	 then
 	 	ExtraLibDir=.
 	 else
-	 	ExtraLibDir='$(LIBPL)'
+	 	ExtraLibDir='$(LIBDIR)'
 	 fi
 	 ExtraLibs="-L$ExtraLibDir -lpython\$(VERSION)";;
 esac
