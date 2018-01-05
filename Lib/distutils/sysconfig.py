@@ -170,9 +170,12 @@ def customize_compiler(compiler):
                 _osx_support.customize_compiler(_config_vars)
                 _config_vars['CUSTOMIZED_OSX_COMPILER'] = 'True'
 
-        (cc, cxx, opt, cflags, ccshared, ldshared, shlib_suffix, ar, ar_flags) = \
-            get_config_vars('CC', 'CXX', 'OPT', 'CFLAGS',
-                            'CCSHARED', 'LDSHARED', 'SHLIB_SUFFIX', 'AR', 'ARFLAGS')
+        (cc, cxx, ccshared, ldshared, ldcxxshared, shlib_suffix, ar, ar_flags) = \
+            get_config_vars('CC', 'CXX', 'CCSHARED', 'LDSHARED', 'LDCXXSHARED',
+                            'SHLIB_SUFFIX', 'AR', 'ARFLAGS')
+
+        cflags = ''
+        cxxflags = ''
 
         if 'CC' in os.environ:
             newcc = os.environ['CC']
@@ -187,19 +190,27 @@ def customize_compiler(compiler):
             cxx = os.environ['CXX']
         if 'LDSHARED' in os.environ:
             ldshared = os.environ['LDSHARED']
+        if 'LDCXXSHARED' in os.environ:
+            ldcxxshared = os.environ['LDCXXSHARED']
         if 'CPP' in os.environ:
             cpp = os.environ['CPP']
         else:
             cpp = cc + " -E"           # not always
         if 'LDFLAGS' in os.environ:
             ldshared = ldshared + ' ' + os.environ['LDFLAGS']
+            ldcxxshared = ldcxxshared + ' ' + os.environ['LDFLAGS']
         if 'CFLAGS' in os.environ:
-            cflags = opt + ' ' + os.environ['CFLAGS']
+            cflags = os.environ['CFLAGS']
             ldshared = ldshared + ' ' + os.environ['CFLAGS']
+        if 'CXXFLAGS' in os.environ:
+            cxxflags = os.environ['CXXFLAGS']
+            ldcxxshared = ldcxxshared + ' ' + os.environ['CXXFLAGS']
         if 'CPPFLAGS' in os.environ:
             cpp = cpp + ' ' + os.environ['CPPFLAGS']
             cflags = cflags + ' ' + os.environ['CPPFLAGS']
+            cxxflags = cxxflags + ' ' + os.environ['CPPFLAGS']
             ldshared = ldshared + ' ' + os.environ['CPPFLAGS']
+            ldcxxshared = ldcxxshared + ' ' + os.environ['CPPFLAGS']
         if 'AR' in os.environ:
             ar = os.environ['AR']
         if 'ARFLAGS' in os.environ:
@@ -208,13 +219,17 @@ def customize_compiler(compiler):
             archiver = ar + ' ' + ar_flags
 
         cc_cmd = cc + ' ' + cflags
+        cxx_cmd = cxx + ' ' + cxxflags
         compiler.set_executables(
             preprocessor=cpp,
             compiler=cc_cmd,
             compiler_so=cc_cmd + ' ' + ccshared,
-            compiler_cxx=cxx,
+            compiler_cxx=cxx_cmd,
+            compiler_so_cxx=cxx_cmd + ' ' + ccshared,
             linker_so=ldshared,
             linker_exe=cc,
+            linker_so_cxx=ldcxxshared,
+            linker_exe_cxx=cxx,
             archiver=archiver)
 
         compiler.shared_lib_extension = shlib_suffix
