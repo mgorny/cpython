@@ -20,10 +20,10 @@ __all__ = [
 
 _INSTALL_SCHEMES = {
     'posix_prefix': {
-        'stdlib': '{installed_base}/lib/python{py_version_short}',
-        'platstdlib': '{platbase}/lib/python{py_version_short}',
-        'purelib': '{base}/lib/python{py_version_short}/site-packages',
-        'platlib': '{platbase}/lib/python{py_version_short}/site-packages',
+        'stdlib': '{installed_base}/@@GENTOO_LIBDIR@@/python{py_version_short}',
+        'platstdlib': '{platbase}/@@GENTOO_LIBDIR@@/python{py_version_short}',
+        'purelib': '{base}/@@GENTOO_LIBDIR@@/python{py_version_short}/site-packages',
+        'platlib': '{platbase}/@@GENTOO_LIBDIR@@/python{py_version_short}/site-packages',
         'include':
             '{installed_base}/include/python{py_version_short}{abiflags}',
         'platinclude':
@@ -61,10 +61,10 @@ _INSTALL_SCHEMES = {
         'data': '{userbase}',
         },
     'posix_user': {
-        'stdlib': '{userbase}/lib/python{py_version_short}',
-        'platstdlib': '{userbase}/lib/python{py_version_short}',
-        'purelib': '{userbase}/lib/python{py_version_short}/site-packages',
-        'platlib': '{userbase}/lib/python{py_version_short}/site-packages',
+        'stdlib': '{userbase}/@@GENTOO_LIBDIR@@/python{py_version_short}',
+        'platstdlib': '{userbase}/@@GENTOO_LIBDIR@@/python{py_version_short}',
+        'purelib': '{userbase}/@@GENTOO_LIBDIR@@/python{py_version_short}/site-packages',
+        'platlib': '{userbase}/@@GENTOO_LIBDIR@@/python{py_version_short}/site-packages',
         'include': '{userbase}/include/python{py_version_short}',
         'scripts': '{userbase}/bin',
         'data': '{userbase}',

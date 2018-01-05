@@ -29,8 +29,8 @@ WINDOWS_SCHEME = {
 
 INSTALL_SCHEMES = {
     'unix_prefix': {
-        'purelib': '$base/lib/python$py_version_short/site-packages',
-        'platlib': '$platbase/lib/python$py_version_short/site-packages',
+        'purelib': '$base/@@GENTOO_LIBDIR@@/python$py_version_short/site-packages',
+        'platlib': '$platbase/@@GENTOO_LIBDIR@@/python$py_version_short/site-packages',
         'headers': '$base/include/python$py_version_short$abiflags/$dist_name',
         'scripts': '$base/bin',
         'data'   : '$base',
