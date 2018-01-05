@@ -997,7 +997,7 @@ $(LIBRARY_OBJS) $(MODOBJS) Programs/python.o: $(PYTHON_HEADERS)
 ######################################################################
 
 TESTOPTS=	$(EXTRATESTOPTS)
-TESTPYTHON=	$(RUNSHARED) ./$(BUILDPYTHON) $(TESTPYTHONOPTS)
+TESTPYTHON=	_PYTHONNOSITEPACKAGES=1 $(RUNSHARED) ./$(BUILDPYTHON) $(TESTPYTHONOPTS)
 TESTRUNNER=	$(TESTPYTHON) $(srcdir)/Tools/scripts/run_tests.py
 TESTTIMEOUT=	1200
 
