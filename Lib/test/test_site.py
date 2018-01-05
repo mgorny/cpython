@@ -8,6 +8,7 @@ import unittest
 import test.support
 from test.support import captured_stderr, TESTFN, EnvironmentVarGuard
 import builtins
+import importlib
 import os
 import sys
 import re
@@ -30,11 +31,18 @@ import site
 
 
 OLD_SYS_PATH = None
+OLD__PYTHONNOSITEPACKAGES = None
 
 
 def setUpModule():
     global OLD_SYS_PATH
     OLD_SYS_PATH = sys.path[:]
+
+    if "_PYTHONNOSITEPACKAGES" in os.environ:
+        global OLD__PYTHONNOSITEPACKAGES
+        OLD__PYTHONNOSITEPACKAGES = os.environ.get("_PYTHONNOSITEPACKAGES")
+        del os.environ["_PYTHONNOSITEPACKAGES"]
+        importlib.reload(site)
 
     if site.ENABLE_USER_SITE and not os.path.isdir(site.USER_SITE):
         # need to add user site directory for tests
@@ -49,6 +57,8 @@ def setUpModule():
 
 def tearDownModule():
     sys.path[:] = OLD_SYS_PATH
+    if OLD__PYTHONNOSITEPACKAGES is not None:
+        os.environ["_PYTHONNOSITEPACKAGES"] = OLD__PYTHONNOSITEPACKAGES
 
 
 class HelperFunctionsTests(unittest.TestCase):
@@ -459,8 +469,11 @@ class StartupImportTests(unittest.TestCase):
     def test_startup_imports(self):
         # This tests checks which modules are loaded by Python when it
         # initially starts upon startup.
+        env = os.environ.copy()
+        env["_PYTHONNOSITEPACKAGES"] = "1"
         popen = subprocess.Popen([sys.executable, '-I', '-v', '-c',
                                   'import sys; print(set(sys.modules))'],
+                                 env=env,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
                                  encoding='utf-8')

@@ -553,8 +553,12 @@ def main():
     known_paths = venv(known_paths)
     if ENABLE_USER_SITE is None:
         ENABLE_USER_SITE = check_enableusersite()
-    known_paths = addusersitepackages(known_paths)
-    known_paths = addsitepackages(known_paths)
+    if os.environ.get("_PYTHONNOSITEPACKAGES") is None:
+        known_paths = addusersitepackages(known_paths)
+        known_paths = addsitepackages(known_paths)
+    else:
+        # Initialize USER_BASE and USER_SITE.
+        getusersitepackages()
     setquit()
     setcopyright()
     sethelper()
