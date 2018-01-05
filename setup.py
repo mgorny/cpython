@@ -527,7 +527,7 @@ class PyBuildExt(build_ext):
         # directories (i.e. '.' and 'Include') must be first.  See issue
         # 10520.
         if not cross_compiling:
-            add_dir_to_list(self.compiler.library_dirs, '/usr/local/lib')
+            add_dir_to_list(self.compiler.library_dirs, '/usr/local/@@GENTOO_LIBDIR@@')
             add_dir_to_list(self.compiler.include_dirs, '/usr/local/include')
         # only change this for cross builds for 3.3, issues on Mageia
         if cross_compiling:
@@ -580,7 +580,7 @@ class PyBuildExt(build_ext):
             add_dir_to_list(self.compiler.include_dirs,
                             sysconfig.get_config_var("INCLUDEDIR"))
 
-        system_lib_dirs = ['/lib64', '/usr/lib64', '/lib', '/usr/lib']
+        system_lib_dirs = ['/@@GENTOO_LIBDIR@@', '/usr/@@GENTOO_LIBDIR@@']
         system_include_dirs = ['/usr/include']
         # lib_dirs and inc_dirs are used to search for files;
         # if a file is found in one of those directories, it can
@@ -824,11 +824,11 @@ class PyBuildExt(build_ext):
             elif curses_library:
                 readline_libs.append(curses_library)
             elif self.compiler.find_library_file(lib_dirs +
-                                                     ['/usr/lib/termcap'],
+                                                     ['/usr/@@GENTOO_LIBDIR@@/termcap'],
                                                      'termcap'):
                 readline_libs.append('termcap')
             exts.append( Extension('readline', ['readline.c'],
-                                   library_dirs=['/usr/lib/termcap'],
+                                   library_dirs=['/usr/@@GENTOO_LIBDIR@@/termcap'],
                                    extra_link_args=readline_extra_link_args,
                                    libraries=readline_libs) )
         else:
@@ -1111,8 +1111,7 @@ class PyBuildExt(build_ext):
 
                 # check lib directories parallel to the location of the header
                 db_dirs_to_check = [
-                    db_incdir.replace("include", 'lib64'),
-                    db_incdir.replace("include", 'lib'),
+                    db_incdir.replace("include", '@@GENTOO_LIBDIR@@'),
                 ]
 
                 if host_platform != 'darwin':
@@ -1223,10 +1222,8 @@ class PyBuildExt(build_ext):
 
         if sqlite_incdir:
             sqlite_dirs_to_check = [
-                os.path.join(sqlite_incdir, '..', 'lib64'),
-                os.path.join(sqlite_incdir, '..', 'lib'),
-                os.path.join(sqlite_incdir, '..', '..', 'lib64'),
-                os.path.join(sqlite_incdir, '..', '..', 'lib'),
+                os.path.join(sqlite_incdir, '..', '@@GENTOO_LIBDIR@@'),
+                os.path.join(sqlite_incdir, '..', '..', '@@GENTOO_LIBDIR@@'),
             ]
             sqlite_libfile = self.compiler.find_library_file(
                                 sqlite_dirs_to_check + lib_dirs, 'sqlite3')
@@ -1887,15 +1884,14 @@ class PyBuildExt(build_ext):
             added_lib_dirs.append('/usr/openwin/lib')
         elif os.path.exists('/usr/X11R6/include'):
             include_dirs.append('/usr/X11R6/include')
-            added_lib_dirs.append('/usr/X11R6/lib64')
-            added_lib_dirs.append('/usr/X11R6/lib')
+            added_lib_dirs.append('/usr/X11R6/@@GENTOO_LIBDIR@@')
         elif os.path.exists('/usr/X11R5/include'):
             include_dirs.append('/usr/X11R5/include')
-            added_lib_dirs.append('/usr/X11R5/lib')
+            added_lib_dirs.append('/usr/X11R5/@@GENTOO_LIBDIR@@')
         else:
             # Assume default location for X11
             include_dirs.append('/usr/X11/include')
-            added_lib_dirs.append('/usr/X11/lib')
+            added_lib_dirs.append('/usr/X11/@@GENTOO_LIBDIR@@')
 
         # If Cygwin, then verify that X is installed before proceeding
         if host_platform == 'cygwin':
