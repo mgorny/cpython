@@ -85,6 +85,7 @@ Programming Language :: Python
 Topic :: Software Development
 """
 
+exit_status = 0
 
 # Set common compiler and linker flags derived from the Makefile,
 # reserved for building the interpreter and the stdlib modules.
@@ -445,7 +446,10 @@ class PyBuildExt(build_ext):
             print_three_column([ext.name for ext in mods_disabled])
             print()
 
+        global exit_status
+
         if self.failed:
+            exit_status = 1
             failed = self.failed[:]
             print()
             print("Failed to build these modules:")
@@ -453,6 +457,7 @@ class PyBuildExt(build_ext):
             print()
 
         if self.failed_on_import:
+            exit_status = 1
             failed = self.failed_on_import[:]
             print()
             print("Following modules built successfully"
@@ -2434,6 +2439,7 @@ def main():
           scripts = ["Tools/scripts/pydoc3", "Tools/scripts/idle3",
                      "Tools/scripts/2to3"]
         )
+    sys.exit(exit_status)
 
 # --install-platlib
 if __name__ == '__main__':
