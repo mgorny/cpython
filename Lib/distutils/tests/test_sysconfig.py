@@ -114,12 +114,13 @@ class SysconfigTestCase(support.EnvironGuard, unittest.TestCase):
         os.environ['AR'] = 'env_ar'
         os.environ['CC'] = 'env_cc'
         os.environ['CPP'] = 'env_cpp'
-        os.environ['CXX'] = 'env_cxx --env-cxx-flags'
+        os.environ['CXX'] = 'env_cxx'
         os.environ['LDSHARED'] = 'env_ldshared'
         os.environ['LDFLAGS'] = '--env-ldflags'
         os.environ['ARFLAGS'] = '--env-arflags'
         os.environ['CFLAGS'] = '--env-cflags'
         os.environ['CPPFLAGS'] = '--env-cppflags'
+        os.environ['CXXFLAGS'] = '--env-cxxflags'
 
         comp = self.customize_compiler()
         self.assertEqual(comp.exes['archiver'],
@@ -127,12 +128,12 @@ class SysconfigTestCase(support.EnvironGuard, unittest.TestCase):
         self.assertEqual(comp.exes['preprocessor'],
                          'env_cpp --env-cppflags')
         self.assertEqual(comp.exes['compiler'],
-                         'env_cc --sc-cflags --env-cflags --env-cppflags')
+                         'env_cc --env-cflags --env-cppflags')
         self.assertEqual(comp.exes['compiler_so'],
-                         ('env_cc --sc-cflags '
+                         ('env_cc '
                           '--env-cflags ''--env-cppflags --sc-ccshared'))
         self.assertEqual(comp.exes['compiler_cxx'],
-                         'env_cxx --env-cxx-flags')
+                         'env_cxx --env-cxxflags --env-cppflags')
         self.assertEqual(comp.exes['linker_exe'],
                          'env_cc')
         self.assertEqual(comp.exes['linker_so'],
@@ -149,6 +150,7 @@ class SysconfigTestCase(support.EnvironGuard, unittest.TestCase):
         del os.environ['ARFLAGS']
         del os.environ['CFLAGS']
         del os.environ['CPPFLAGS']
+        del os.environ['CXXFLAGS']
 
         comp = self.customize_compiler()
         self.assertEqual(comp.exes['archiver'],
@@ -156,11 +158,11 @@ class SysconfigTestCase(support.EnvironGuard, unittest.TestCase):
         self.assertEqual(comp.exes['preprocessor'],
                          'sc_cc -E')
         self.assertEqual(comp.exes['compiler'],
-                         'sc_cc --sc-cflags')
+                         'sc_cc ')
         self.assertEqual(comp.exes['compiler_so'],
-                         'sc_cc --sc-cflags --sc-ccshared')
+                         'sc_cc  --sc-ccshared')
         self.assertEqual(comp.exes['compiler_cxx'],
-                         'sc_cxx')
+                         'sc_cxx ')
         self.assertEqual(comp.exes['linker_exe'],
                          'sc_cc')
         self.assertEqual(comp.exes['linker_so'],
