@@ -1,6 +1,7 @@
 import faulthandler
 import importlib
 import io
+import json
 import os
 import sys
 import time
@@ -79,7 +80,7 @@ def get_abs_module(ns, test):
         return 'test.' + test
 
 
-def runtest(ns, test):
+def runtest(ns, test, *, slave=False):
     """Run a single test.
 
     ns -- regrtest namespace of options
@@ -97,6 +98,25 @@ def runtest(ns, test):
     """
 
     output_on_failure = ns.verbose3
+
+    if not slave and test == "test_site":
+        retcode, stdout, stderr = run_test_in_subprocess(test, ns)
+        if retcode != 0:
+            result = (CHILD_ERROR, None)
+        else:
+            stdout, _, result = stdout.strip().rpartition("\n")
+            if not result:
+                return (None, None)
+            result = json.loads(result)
+        stdout = stdout.rstrip()
+        stderr = stderr.rstrip()
+        if stdout:
+            print(stdout, flush=True)
+        if stderr and not ns.pgo:
+            print(stderr, file=sys.stderr, flush=True)
+        if result[0] == INTERRUPTED:
+            raise KeyboardInterrupt
+        return result
 
     use_timeout = (ns.timeout is not None)
     if use_timeout:
@@ -145,6 +165,40 @@ runtest.stringio = None
 
 def post_test_cleanup():
     support.reap_children()
+
+def run_test_in_subprocess(testname, ns):
+    """Run the given test in a subprocess with --slaveargs.
+
+    ns is the option Namespace parsed from command-line arguments. regrtest
+    is invoked in a subprocess with the --slaveargs argument; when the
+    subprocess exits, its return code, stdout and stderr are returned as a
+    3-tuple.
+    """
+    from subprocess import Popen, PIPE
+
+    ns_dict = vars(ns)
+    slaveargs = (ns_dict, testname)
+    slaveargs = json.dumps(slaveargs)
+
+    cmd = [sys.executable, *support.args_from_interpreter_flags(),
+           '-u',    # Unbuffered stdout and stderr
+           '-m', 'test.regrtest',
+           '--slaveargs', slaveargs]
+    if ns.pgo:
+        cmd += ['--pgo']
+
+    # Running the child from the same working directory as regrtest's original
+    # invocation ensures that TEMPDIR for the child is the same when
+    # sysconfig.is_python_build() is true. See issue 15300.
+    popen = Popen(cmd,
+                  stdout=PIPE, stderr=PIPE,
+                  universal_newlines=True,
+                  close_fds=(os.name != 'nt'),
+                  cwd=support.SAVEDCWD)
+    with popen:
+        stdout, stderr = popen.communicate()
+        retcode = popen.wait()
+    return retcode, stdout, stderr
 
 
 def runtest_inner(ns, test, display_failure=True):

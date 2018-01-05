@@ -1,12 +1,10 @@
 import faulthandler
 import json
-import os
 import queue
 import sys
 import time
 import traceback
 import types
-from test import support
 try:
     import threading
 except ImportError:
@@ -14,7 +12,7 @@ except ImportError:
     sys.exit(2)
 
 from test.libregrtest.runtest import (
-    runtest, INTERRUPTED, CHILD_ERROR, PROGRESS_MIN_TIME,
+    runtest, run_test_in_subprocess, INTERRUPTED, CHILD_ERROR, PROGRESS_MIN_TIME,
     format_test_result)
 from test.libregrtest.setup import setup_tests
 
@@ -26,41 +24,6 @@ PROGRESS_UPDATE = 30.0   # seconds
 WAIT_PROGRESS = 2.0   # seconds
 
 
-def run_test_in_subprocess(testname, ns):
-    """Run the given test in a subprocess with --slaveargs.
-
-    ns is the option Namespace parsed from command-line arguments. regrtest
-    is invoked in a subprocess with the --slaveargs argument; when the
-    subprocess exits, its return code, stdout and stderr are returned as a
-    3-tuple.
-    """
-    from subprocess import Popen, PIPE
-
-    ns_dict = vars(ns)
-    slaveargs = (ns_dict, testname)
-    slaveargs = json.dumps(slaveargs)
-
-    cmd = [sys.executable, *support.args_from_interpreter_flags(),
-           '-u',    # Unbuffered stdout and stderr
-           '-m', 'test.regrtest',
-           '--slaveargs', slaveargs]
-    if ns.pgo:
-        cmd += ['--pgo']
-
-    # Running the child from the same working directory as regrtest's original
-    # invocation ensures that TEMPDIR for the child is the same when
-    # sysconfig.is_python_build() is true. See issue 15300.
-    popen = Popen(cmd,
-                  stdout=PIPE, stderr=PIPE,
-                  universal_newlines=True,
-                  close_fds=(os.name != 'nt'),
-                  cwd=support.SAVEDCWD)
-    with popen:
-        stdout, stderr = popen.communicate()
-        retcode = popen.wait()
-    return retcode, stdout, stderr
-
-
 def run_tests_slave(slaveargs):
     ns_dict, testname = json.loads(slaveargs)
     ns = types.SimpleNamespace(**ns_dict)
@@ -68,7 +31,7 @@ def run_tests_slave(slaveargs):
     setup_tests(ns)
 
     try:
-        result = runtest(ns, testname)
+        result = runtest(ns, testname, slave=True)
     except KeyboardInterrupt:
         result = INTERRUPTED, ''
     except BaseException as e:
