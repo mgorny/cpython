@@ -303,7 +303,7 @@ def getsitepackages(prefixes=None):
         seen.add(prefix)
 
         if os.sep == '/':
-            sitepackages.append(os.path.join(prefix, "lib",
+            sitepackages.append(os.path.join(prefix, "@@GENTOO_LIBDIR@@",
                                         "python" + sys.version[:3],
                                         "site-packages"))
         else:
