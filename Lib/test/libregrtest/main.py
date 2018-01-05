@@ -102,7 +102,7 @@ class Regrtest:
 
     def accumulate_result(self, test, result):
         ok, test_time = result
-        if ok not in (CHILD_ERROR, INTERRUPTED):
+        if ok not in (None, CHILD_ERROR, INTERRUPTED):
             self.test_times.append((test_time, test))
         if ok == PASSED:
             self.good.append(test)
@@ -115,7 +115,7 @@ class Regrtest:
         elif ok == RESOURCE_DENIED:
             self.skipped.append(test)
             self.resource_denieds.append(test)
-        elif ok != INTERRUPTED:
+        elif ok not in (None, INTERRUPTED):
             raise ValueError("invalid test result: %r" % ok)
 
     def display_progress(self, test_index, test):
