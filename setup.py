@@ -55,6 +55,8 @@ if pds_env in os.environ:
 else:
     disable_ssl = 0
 
+exit_status = 0
+
 def add_dir_to_list(dirlist, dir):
     """Add the directory 'dir' to the list 'dirlist' (after any relative
     directories) if:
@@ -337,7 +339,10 @@ class PyBuildExt(build_ext):
             " Setup files:")
             print_three_column([ext.name for ext in removed_modules])
 
+        global exit_status
+
         if self.failed:
+            exit_status = 1
             failed = self.failed[:]
             print()
             print("Failed to build these modules:")
@@ -345,6 +350,7 @@ class PyBuildExt(build_ext):
             print()
 
         if self.failed_on_import:
+            exit_status = 1
             failed = self.failed_on_import[:]
             print()
             print("Following modules built successfully"
@@ -2356,6 +2362,7 @@ def main():
           scripts = ["Tools/scripts/pydoc3", "Tools/scripts/idle3",
                      "Tools/scripts/2to3", "Tools/scripts/pyvenv"]
         )
+    sys.exit(exit_status)
 
 # --install-platlib
 if __name__ == '__main__':
