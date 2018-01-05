@@ -45,7 +45,6 @@ BASECFLAGS="@BASECFLAGS@"
 LDLIBRARY="@LDLIBRARY@"
 LINKFORSHARED="@LINKFORSHARED@"
 OPT="@OPT@"
-PY_ENABLE_SHARED="@PY_ENABLE_SHARED@"
 LDVERSION="@LDVERSION@"
 LIBDEST=${prefix}/lib/python${VERSION}
 LIBPL=$(echo "@LIBPL@" | sed "s#$prefix_build#$prefix_real#")
@@ -92,11 +91,7 @@ do
             if [ -z "$PYTHONFRAMEWORK" ] ; then
                 LINKFORSHAREDUSED=$LINKFORSHARED
             fi
-            LIBPLUSED=
-            if [ "$PY_ENABLE_SHARED" = "0" ] ; then
-                LIBPLUSED="-L$LIBPL"
-            fi
-            echo "$LIBPLUSED -L$libdir $LIBS $LINKFORSHAREDUSED"
+            echo "-L$libdir $LIBS $LINKFORSHAREDUSED"
         ;;
         --extension-suffix)
             echo "$SO"
