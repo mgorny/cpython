@@ -518,8 +518,12 @@ def main():
     known_paths = removeduppaths()
     if ENABLE_USER_SITE is None:
         ENABLE_USER_SITE = check_enableusersite()
-    known_paths = addusersitepackages(known_paths)
-    known_paths = addsitepackages(known_paths)
+    if os.environ.get("_PYTHONNOSITEPACKAGES") is None:
+        known_paths = addusersitepackages(known_paths)
+        known_paths = addsitepackages(known_paths)
+    else:
+        # Initialize USER_BASE and USER_SITE.
+        getusersitepackages()
     if sys.platform == 'os2emx':
         setBEGINLIBPATH()
     setquit()

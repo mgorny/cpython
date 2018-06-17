@@ -9,6 +9,7 @@ from test.test_support import run_unittest, TESTFN, EnvironmentVarGuard
 from test.test_support import captured_output
 import __builtin__
 import errno
+import imp
 import os
 import sys
 import re
@@ -27,11 +28,18 @@ else:
 
 
 OLD_SYS_PATH = None
+OLD__PYTHONNOSITEPACKAGES = None
 
 
 def setUpModule():
     global OLD_SYS_PATH
     OLD_SYS_PATH = sys.path[:]
+
+    if "_PYTHONNOSITEPACKAGES" in os.environ:
+        global OLD__PYTHONNOSITEPACKAGES
+        OLD__PYTHONNOSITEPACKAGES = os.environ.get("_PYTHONNOSITEPACKAGES")
+        del os.environ["_PYTHONNOSITEPACKAGES"]
+        imp.reload(site)
 
     if site.ENABLE_USER_SITE and not os.path.isdir(site.USER_SITE):
         # need to add user site directory for tests
@@ -49,6 +57,8 @@ def setUpModule():
 
 def tearDownModule():
     sys.path[:] = OLD_SYS_PATH
+    if OLD__PYTHONNOSITEPACKAGES is not None:
+        os.environ["_PYTHONNOSITEPACKAGES"] = OLD__PYTHONNOSITEPACKAGES
 
 
 class HelperFunctionsTests(unittest.TestCase):

@@ -188,6 +188,7 @@ import tempfile
 import imp
 import platform
 import sysconfig
+from subprocess import Popen, PIPE
 
 
 # Some times __path__ and __file__ are not absolute (e.g. while running from
@@ -599,9 +600,73 @@ def main(tests=None, testdir=None, verbose=0, quiet=False,
     test_support.use_resources = use_resources
     save_modules = set(sys.modules)
 
+    opt_args = test_support.args_from_interpreter_flags()
+    base_cmd = [sys.executable] + opt_args + ['-m', 'test.regrtest']
+    # required to spawn a new process with PGO flag on/off
+    if pgo:
+        base_cmd = base_cmd + ['--pgo']
+    debug_output_pat = re.compile(r"\[\d+ refs\]$")
+
+    def get_args_tuple(test, verbose, quiet, huntrleaks, use_resources,
+                       failfast, match_tests, pgo):
+        return (
+            (test, verbose, quiet),
+            dict(huntrleaks=huntrleaks, use_resources=use_resources,
+                 failfast=failfast, match_tests=match_tests, pgo=pgo)
+        )
+
+    def _runtest(test, verbose, quiet, huntrleaks=False, use_resources=None,
+                 pgo=False, failfast=False, match_tests=None, testdir=None):
+        if test == "test_site":
+            args_tuple = get_args_tuple(test, verbose, quiet, huntrleaks,
+                                        use_resources, failfast, match_tests,
+                                        pgo)
+            args = base_cmd + ['--slaveargs', json.dumps(args_tuple)]
+            if testdir:
+                args.extend(('--testdir', testdir))
+            env = os.environ.copy()
+            try:
+                del env["_PYTHONNOSITEPACKAGES"]
+            except KeyError:
+                pass
+            popen = Popen(args,
+                          stdout=PIPE, stderr=PIPE,
+                          universal_newlines=True,
+                          close_fds=(os.name != 'nt'),
+                          cwd=test_support.SAVEDCWD,
+                          env=env)
+            stdout, stderr = popen.communicate()
+            retcode = popen.wait()
+            # Strip last refcount output line if it exists, since it
+            # comes from the shutdown of the interpreter in the subcommand.
+            stderr = debug_output_pat.sub("", stderr)
+            if retcode == 0:
+                stdout, _, result = stdout.strip().rpartition("\n")
+                if not result:
+                    return (None, None)
+                result = json.loads(result)
+            else:
+                result = (CHILD_ERROR, None)
+            stdout = stdout.rstrip()
+            stderr = stderr.rstrip()
+            if stdout:
+                print stdout
+            sys.stdout.flush()
+            if stderr and not pgo:
+                print >>sys.stderr, stderr
+            sys.stderr.flush()
+            if result[0] == INTERRUPTED:
+                raise KeyboardInterrupt
+            return result
+        else:
+            return runtest(test, verbose, quiet, huntrleaks=huntrleaks,
+                           use_resources=use_resources, pgo=pgo,
+                           failfast=failfast, match_tests=match_tests,
+                           testdir=testdir)
+
     def accumulate_result(test, result):
         ok, test_time = result
-        if ok not in (CHILD_ERROR, INTERRUPTED):
+        if ok not in (None, CHILD_ERROR, INTERRUPTED):
             test_times.append((test_time, test))
         if ok == PASSED:
             good.append(test)
@@ -614,7 +679,7 @@ def main(tests=None, testdir=None, verbose=0, quiet=False,
         elif ok == RESOURCE_DENIED:
             skipped.append(test)
             resource_denieds.append(test)
-        elif ok != INTERRUPTED:
+        elif ok not in (None, INTERRUPTED):
             raise ValueError("invalid test result: %r" % ok)
 
     if forever:
@@ -681,25 +746,14 @@ def main(tests=None, testdir=None, verbose=0, quiet=False,
             print "Multiprocess option requires thread support"
             sys.exit(2)
         from Queue import Queue, Empty
-        from subprocess import Popen, PIPE
-        debug_output_pat = re.compile(r"\[\d+ refs\]$")
         output = Queue()
         def tests_and_args():
             for test in tests:
-                args_tuple = (
-                    (test, verbose, quiet),
-                    dict(huntrleaks=huntrleaks, use_resources=use_resources,
-                         failfast=failfast,
-                         match_tests=match_tests,
-                         pgo=pgo)
-                )
+                args_tuple = get_args_tuple(test, verbose, quiet, huntrleaks,
+                                            use_resources, failfast,
+                                            match_tests, pgo)
                 yield (test, args_tuple)
         pending = tests_and_args()
-        opt_args = test_support.args_from_interpreter_flags()
-        base_cmd = [sys.executable] + opt_args + ['-m', 'test.regrtest']
-        # required to spawn a new process with PGO flag on/off
-        if pgo:
-            base_cmd = base_cmd + ['--pgo']
 
         class MultiprocessThread(Thread):
             current_test = None
@@ -830,10 +884,10 @@ def main(tests=None, testdir=None, verbose=0, quiet=False,
                 display_progress(test_index, text)
 
             def local_runtest():
-                result = runtest(test, verbose, quiet, huntrleaks, None, pgo,
-                                 failfast=failfast,
-                                 match_tests=match_tests,
-                                 testdir=testdir)
+                result = _runtest(test, verbose, quiet, huntrleaks, None, pgo,
+                                  failfast=failfast,
+                                  match_tests=match_tests,
+                                  testdir=testdir)
                 accumulate_result(test, result)
                 return result
 
@@ -851,8 +905,8 @@ def main(tests=None, testdir=None, verbose=0, quiet=False,
                     if verbose3 and result[0] == FAILED:
                         if not pgo:
                             print "Re-running test %r in verbose mode" % test
-                        runtest(test, True, quiet, huntrleaks, None, pgo,
-                                testdir=testdir)
+                        _runtest(test, True, quiet, huntrleaks, None, pgo,
+                                 testdir=testdir)
                 except KeyboardInterrupt:
                     interrupted = True
                     break
@@ -928,8 +982,8 @@ def main(tests=None, testdir=None, verbose=0, quiet=False,
             sys.stdout.flush()
             try:
                 test_support.verbose = True
-                ok = runtest(test, True, quiet, huntrleaks, None, pgo,
-                             testdir=testdir)
+                ok = _runtest(test, True, quiet, huntrleaks, None, pgo,
+                              testdir=testdir)
             except KeyboardInterrupt:
                 # print a newline separate from the ^C
                 print
