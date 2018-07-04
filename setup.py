@@ -1712,7 +1712,6 @@ class PyBuildExt(build_ext):
         self.detect_dbm_gdbm()
         self.detect_sqlite()
         self.detect_platform_specific_exts()
-        self.detect_nis()
         self.detect_compress_exts()
         self.detect_expat_elementtree()
         self.detect_multibytecodecs()
