@@ -1344,7 +1344,7 @@ class PyBuildExt(build_ext):
         else:
             missing.extend(['resource', 'termios'])
 
-        nis = self._detect_nis(inc_dirs, lib_dirs)
+        nis = None
         if nis is not None:
             exts.append(nis)
         else:
