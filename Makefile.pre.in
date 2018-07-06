@@ -138,7 +138,6 @@ SCRIPTDIR=	$(prefix)/lib
 ABIFLAGS=	@ABIFLAGS@
 
 # Detailed destination directories
-BINLIBDEST=	$(LIBDIR)/python$(VERSION)
 LIBDEST=	$(SCRIPTDIR)/python$(VERSION)
 INCLUDEPY=	$(INCLUDEDIR)/python$(LDVERSION)
 CONFINCLUDEPY=	$(CONFINCLUDEDIR)/python$(LDVERSION)
@@ -149,7 +148,7 @@ EXT_SUFFIX=	@EXT_SUFFIX@
 LDSHARED=	@LDSHARED@ $(PY_LDFLAGS)
 BLDSHARED=	@BLDSHARED@ $(PY_LDFLAGS)
 LDCXXSHARED=	@LDCXXSHARED@
-DESTSHARED=	$(BINLIBDEST)/lib-dynload
+DESTSHARED=	$(LIBDEST)/lib-dynload
 
 # Executable suffix (.exe on Windows and Mac OS X)
 EXE=		@EXEEXT@
@@ -1132,7 +1131,7 @@ commoninstall:  check-clean-src @FRAMEWORKALTINSTALLFIRST@ \
 		@FRAMEWORKALTINSTALLLAST@
 
 # Install shared libraries enabled by Setup
-DESTDIRS=	$(exec_prefix) $(LIBDIR) $(BINLIBDEST) $(DESTSHARED)
+DESTDIRS=	$(exec_prefix) $(LIBDIR) $(DESTSHARED)
 
 oldsharedinstall: $(DESTSHARED) $(SHAREDMODS)
 		@for i in X $(SHAREDMODS); do \
