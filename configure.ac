@@ -4838,7 +4838,7 @@ fi
 
 # first curses header check
 ac_save_cppflags="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -I/usr/include/ncursesw"
+CPPFLAGS="$CPPFLAGS `$PKG_CONFIG --cflags ncursesw`"
 
 AC_CHECK_HEADERS(curses.h ncurses.h)
 
