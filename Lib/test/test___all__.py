@@ -71,6 +71,8 @@ class AllTest(unittest.TestCase):
         blacklist = set([
             # Will raise a SyntaxError when compiling the exec statement
             '__future__',
+            # imports numpy which causes warnings
+            'test.test_pickletools',
         ])
 
         if not sys.platform.startswith('java'):
